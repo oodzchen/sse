@@ -42,7 +42,7 @@ func TestServerCreateStream(t *testing.T) {
 
 	s.CreateStream("test")
 
-	assert.NotNil(t, s.getStream("test"))
+	assert.NotNil(t, s.GetStream("test"))
 }
 
 func TestServerWithCallback(t *testing.T) {
@@ -65,7 +65,7 @@ func TestServerCreateExistingStream(t *testing.T) {
 
 	s.CreateStream("test")
 
-	assert.NotNil(t, s.getStream("test"))
+	assert.NotNil(t, s.GetStream("test"))
 	assert.Equal(t, numGoRoutines, runtime.NumGoroutine())
 }
 
@@ -76,7 +76,7 @@ func TestServerRemoveStream(t *testing.T) {
 	s.CreateStream("test")
 	s.RemoveStream("test")
 
-	assert.Nil(t, s.getStream("test"))
+	assert.Nil(t, s.GetStream("test"))
 }
 
 func TestServerRemoveNonExistentStream(t *testing.T) {
@@ -93,7 +93,7 @@ func TestServerExistingStreamPublish(t *testing.T) {
 	defer s.Close()
 
 	s.CreateStream("test")
-	stream := s.getStream("test")
+	stream := s.GetStream("test")
 	sub := stream.addSubscriber(0, nil)
 
 	s.Publish("test", &Event{Data: []byte("test")})

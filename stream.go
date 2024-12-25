@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"sync"
 	"sync/atomic"
+	"time"
 )
 
 // Stream ...
@@ -28,6 +29,8 @@ type Stream struct {
 	// Specifies the function to run when client subscribe or un-subscribe
 	OnSubscribe   func(streamID string, sub *Subscriber)
 	OnUnsubscribe func(streamID string, sub *Subscriber)
+
+	LastSeen time.Time
 }
 
 // newStream returns a new stream
@@ -44,7 +47,16 @@ func newStream(id string, buffSize int, replay, isAutoStream bool, onSubscribe, 
 		Eventlog:      make(EventLog, 0),
 		OnSubscribe:   onSubscribe,
 		OnUnsubscribe: onUnsubscribe,
+		LastSeen:      time.Now(),
 	}
+}
+
+func (str *Stream) UpdateSeen() {
+	str.LastSeen = time.Now()
+}
+
+func (str *Stream) IsActive(duration time.Duration) bool {
+	return time.Since(str.LastSeen) <= duration
 }
 
 func (str *Stream) run() {

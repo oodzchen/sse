@@ -223,5 +223,5 @@ func TestHTTPStreamHandlerAutoStream(t *testing.T) {
 
 	_, _ = wait(events, 1*time.Second)
 
-	assert.Equal(t, (*Stream)(nil), sseServer.getStream("test"))
+	assert.Equal(t, (*Stream)(nil), sseServer.GetStream("test"))
 }

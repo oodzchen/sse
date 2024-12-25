@@ -103,7 +103,7 @@ func (s *Server) RemoveStream(id string) {
 
 // StreamExists checks whether a stream by a given id exists
 func (s *Server) StreamExists(id string) bool {
-	return s.getStream(id) != nil
+	return s.GetStream(id) != nil
 }
 
 // Publish sends a mesage to every client in a streamID.
@@ -111,7 +111,7 @@ func (s *Server) StreamExists(id string) bool {
 // all subscribers (but not necessarily arrived the clients), or when the
 // stream is closed.
 func (s *Server) Publish(id string, event *Event) {
-	stream := s.getStream(id)
+	stream := s.GetStream(id)
 	if stream == nil {
 		return
 	}
@@ -127,7 +127,7 @@ func (s *Server) Publish(id string, event *Event) {
 // Together with a small BufferSize, it can be useful when publishing the
 // latest message ASAP is more important than reliable delivery.
 func (s *Server) TryPublish(id string, event *Event) bool {
-	stream := s.getStream(id)
+	stream := s.GetStream(id)
 	if stream == nil {
 		return false
 	}
@@ -140,7 +140,7 @@ func (s *Server) TryPublish(id string, event *Event) bool {
 	}
 }
 
-func (s *Server) getStream(id string) *Stream {
+func (s *Server) GetStream(id string) *Stream {
 	s.muStreams.RLock()
 	defer s.muStreams.RUnlock()
 	return s.streams[id]
@@ -154,3 +154,45 @@ func (s *Server) process(event *Event) *Event {
 	}
 	return event
 }
+
+func (s *Server) CountStreams() int {
+	return len(s.streams)
+}
+
+func (s *Server) GetStreamStats(timeoutDuration time.Duration) map[string]int {
+	s.muStreams.RLock()
+	defer s.muStreams.RUnlock()
+	var countActive, countInactive int
+	for _, stream := range s.streams {
+		if stream.IsActive(timeoutDuration) {
+			countActive += 1
+		} else {
+			countInactive += 1
+		}
+	}
+
+	return map[string]int{
+		"total":    s.CountStreams(),
+		"active":   countActive,
+		"inactvie": countInactive,
+	}
+}
+
+func (s *Server) GetAllStreamIDs() []string {
+	var ids []string
+	for id := range s.streams {
+		ids = append(ids, id)
+	}
+	return ids
+}
+
+// func (s *Server) PruneInactiveStreams(timeoutDuration time.Duration) {
+// 	s.muStreams.RLock()
+// 	defer s.muStreams.RUnlock()
+// 	for id, stream := range s.streams {
+// 		if !stream.IsActive(timeoutDuration) {
+// 			stream.removeAllSubscribers()
+// 			s.RemoveStream(id)
+// 		}
+// 	}
+// }
